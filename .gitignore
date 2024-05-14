@@ -1,0 +1,15 @@
+.DS_Store
+.idea
+.vscode
+bin/
+tmp
+dist/
+doc/
+vendor/
+.env
+*.test
+*.out
+backup/
+logs/
+bot_files/
+config.json
