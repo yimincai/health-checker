@@ -65,7 +65,10 @@ func (b *Bot) Run() {
 	}
 
 	logger.Infof("Bot Login as %s, UserID: %s", b.Session.State.User.String(), b.Session.State.User.ID)
-	b.Svc.InitWatchers()
+	err = b.Svc.InitWatchers()
+	if err != nil {
+		logger.Fatalf("Error initializing watchers: %v", err)
+	}
 	logger.Info("All Watchers initialized.")
 	logger.Info("Bot is now running. Press CTRL-C to exit.")
 

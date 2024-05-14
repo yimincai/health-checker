@@ -33,7 +33,11 @@ func (s *Service) InitWatchers() error {
 	}
 
 	for _, w := range watchers {
-		s.AddWatcher(w)
+		err := s.AddWatcher(w)
+		if err != nil {
+			logger.Errorf("Error adding watcher %s: %v", w.Name, err)
+			return err
+		}
 		logger.Infof("✅ Watcher %s added", w.Name)
 	}
 
@@ -225,7 +229,10 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 				Description: message,
 				Color:       0xff0000, // red
 			}
-			s.Session.ChannelMessageSendEmbed(s.Cfg.SendingChannel, embedMsg)
+			_, err = s.Session.ChannelMessageSendEmbed(s.Cfg.SendingChannel, embedMsg)
+			if err != nil {
+				logger.Errorf("Error sending message to channel %s: %v", s.Cfg.SendingChannel, err)
+			}
 
 			w.SetCronID(cronID)
 			return nil
