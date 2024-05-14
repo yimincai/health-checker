@@ -7,8 +7,8 @@ import (
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/yimincai/health-checker/internal/bot"
 	"github.com/yimincai/health-checker/internal/service"
-	"github.com/yimincai/health-checker/internal/utils"
 	"github.com/yimincai/health-checker/pkg/logger"
+	"github.com/yimincai/health-checker/pkg/utils"
 )
 
 type CommandHealth struct {

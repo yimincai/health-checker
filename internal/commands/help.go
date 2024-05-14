@@ -4,8 +4,8 @@ import (
 	"github.com/yimincai/health-checker/internal/bot"
 	"github.com/yimincai/health-checker/internal/config"
 	"github.com/yimincai/health-checker/internal/errs"
-	"github.com/yimincai/health-checker/internal/utils"
 	"github.com/yimincai/health-checker/pkg/logger"
+	"github.com/yimincai/health-checker/pkg/utils"
 )
 
 type CommandHelp struct {
