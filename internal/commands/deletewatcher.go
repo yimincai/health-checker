@@ -57,8 +57,9 @@ func (c *CommandDeleteWatcher) Exec(ctx *bot.Context) (err error) {
 	}
 
 	c.Svc.Cron.Remove(watcher.GetCronID())
-	watcher.DeleteCronID()
-	watcher.ResetContinueErrorTimes()
+	watcher.RemoveCronID()
+	watcher.RemoveContinueErrorTimes()
+	watcher.RemoveLastStatus()
 
 	response := fmt.Sprintf("✅ Watcher %s deleted", watcher.Name)
 	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, response)

@@ -64,7 +64,7 @@ func registerCommands(b *bot.Bot) {
 		logger.Errorf("Error executing command: %v", err)
 		embedMsg := &discordgo.MessageEmbed{
 			Title:       "Error",
-			Description: "error" + err.Error(),
+			Description: "error: " + err.Error(),
 			Color:       0xff0000,
 		}
 		_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, embedMsg)

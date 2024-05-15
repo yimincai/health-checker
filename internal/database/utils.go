@@ -4,8 +4,6 @@ import (
 	"reflect"
 	"strings"
 	"unicode"
-
-	"github.com/yimincai/health-checker/pkg/logger"
 )
 
 // ParseRDBUpdateData is the same as ParseMDBUpdateData, but it will use the struct field name with the first letter lower case,
@@ -17,7 +15,7 @@ func ParseRDBUpdateData(x interface{}, skipFields ...string) map[string]interfac
 	t := reflect.TypeOf(x)
 	v := reflect.ValueOf(x)
 
-	logger.Debugf("number of field:s %v", t.NumField())
+	// logger.Debugf("number of field:s %v", t.NumField())
 
 	for i := 0; i < t.NumField(); i++ {
 		tField := t.Field(i)
@@ -27,15 +25,15 @@ func ParseRDBUpdateData(x interface{}, skipFields ...string) map[string]interfac
 
 		// Skip the field if it's in the skipFields list
 		if isSkip(skipFields, name) {
-			logger.Debugf("skip field: %s", name)
+			// logger.Debugf("skip field: %s", name)
 			continue
 		}
 
-		logger.Debugf("process field: %s", name)
+		// logger.Debugf("process field: %s", name)
 
 		// if the field is embedded, unpack the field to result map
 		if strings.Contains(tField.Tag.Get("gorm"), "embedded") {
-			logger.Debugf("embedded field: %s", name)
+			// logger.Debugf("embedded field: %s", name)
 
 			if vField.Kind() != reflect.Ptr {
 				// unpack the embedded field to result map[string]interface{}
@@ -49,7 +47,7 @@ func ParseRDBUpdateData(x interface{}, skipFields ...string) map[string]interfac
 
 			// Check if the field is a pointer and if it's a nil
 			if vField.Kind() == reflect.Ptr && vField.IsNil() {
-				logger.Debugf("embedded field is nil: %s", name)
+				// logger.Debugf("embedded field is nil: %s", name)
 				continue
 			}
 
@@ -64,7 +62,7 @@ func ParseRDBUpdateData(x interface{}, skipFields ...string) map[string]interfac
 					result[k] = v
 				}
 
-				logger.Debugf("embedded field unpacked: %s", name)
+				// logger.Debugf("embedded field unpacked: %s", name)
 			}
 			continue
 		}

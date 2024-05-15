@@ -22,6 +22,16 @@ func init() {
 	WatcherContinueErrorTimesMap = make(map[string]int)
 }
 
+func (w *Watcher) GetCronExpression() string {
+	return fmt.Sprintf("@every %ds", w.Interval)
+}
+
+func (w *Watcher) GetCronExpressionWithContinuesErrorTimes() string {
+	wcemLocker.RLock()
+	defer wcemLocker.RUnlock()
+	return fmt.Sprintf("@every %ds", w.Interval*WatcherContinueErrorTimesMap[w.ID]*3)
+}
+
 func (w *Watcher) GetCronID() cron.EntryID {
 	scmLocker.RLock()
 	defer scmLocker.RUnlock()
@@ -34,27 +44,10 @@ func (w *Watcher) SetCronID(id cron.EntryID) {
 	CronScheduledMap[w.ID] = id
 }
 
-func (w *Watcher) DeleteCronID() {
+func (w *Watcher) RemoveCronID() {
 	scmLocker.Lock()
 	defer scmLocker.Unlock()
 	delete(CronScheduledMap, w.ID)
-}
-
-func (w *Watcher) IsCronScheduled() bool {
-	scmLocker.RLock()
-	defer scmLocker.RUnlock()
-	_, ok := CronScheduledMap[w.ID]
-	return ok
-}
-
-func (w *Watcher) GetCronExpression() string {
-	return fmt.Sprintf("@every %ds", w.Interval)
-}
-
-func (w *Watcher) GetCronExpressionWithContinuesErrorTimes() string {
-	wcemLocker.RLock()
-	defer wcemLocker.RUnlock()
-	return fmt.Sprintf("@every %ds", w.Interval*WatcherContinueErrorTimesMap[w.ID]*3)
 }
 
 func (w *Watcher) SetLastStatus(b bool) {
@@ -73,7 +66,7 @@ func (w *Watcher) GetLastStatus() bool {
 	return WatcherLastStatusMap[w.ID]
 }
 
-func (w *Watcher) UnsetLastStatus() {
+func (w *Watcher) RemoveLastStatus() {
 	wlsmLocker.Lock()
 	defer wlsmLocker.Unlock()
 	delete(WatcherLastStatusMap, w.ID)
@@ -99,7 +92,7 @@ func (w *Watcher) GetContinueErrorTimes() int {
 	return WatcherContinueErrorTimesMap[w.ID]
 }
 
-func (w *Watcher) ResetContinueErrorTimes() {
+func (w *Watcher) RemoveContinueErrorTimes() {
 	wcemLocker.Lock()
 	defer wcemLocker.Unlock()
 	delete(WatcherContinueErrorTimesMap, w.ID)

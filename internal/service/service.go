@@ -142,8 +142,8 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 	if err != nil {
 		if errors.Is(err, errs.ErrWatcherNotFound) {
 			// if the watcher is not found, remove the cron by cronID
-			watcher.DeleteCronID()
-			watcher.ResetContinueErrorTimes()
+			watcher.RemoveCronID()
+			watcher.RemoveContinueErrorTimes()
 			s.Cron.Remove(watcher.GetCronID())
 			return errs.ErrWatcherNotFound
 		}
@@ -154,17 +154,21 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 	// Defining location using FixedZone method
 	location := time.FixedZone("UTC+8", 8*60*60)
 	result := s.checkHttp(w)
-	w.SetLastStatus(result.Status)
+	defer func() {
+		w.SetLastStatus(result.Status)
+	}()
+
+	// logger.Debugf("Service %s is checking, Last status: %v, current status: %v", w.Name, w.GetLastStatus(), result.Status)
 
 	// change the status of the service
 	if w.GetLastStatus() != result.Status {
-		logger.Debugf("Service %s is changing status, Last status: %v, current status: %v", w.Name, w.GetLastStatus(), result.Status)
+		// logger.Debugf("Service %s is changing status, Last status: %v, current status: %v", w.Name, w.GetLastStatus(), result.Status)
 		if !w.GetLastStatus() && result.Status {
 			timeString := time.Now().In(location).Format("2006/01/02 15:04:05")
 			message := fmt.Sprintf("[%s] Service %s is up ", timeString, w.Name)
-			logger.Infof("✅ Service %s is up", w.Name)
+			logger.Infof("✅ Service %s is fixed", w.Name)
 			embedMsg := &discordgo.MessageEmbed{
-				Title:       "✅ Service is up",
+				Title:       "✅ Service is fixed",
 				Description: message,
 				Color:       0x00ff00, // green
 			}
@@ -175,8 +179,8 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 
 			// remove cron by cronID
 			s.Cron.Remove(w.GetCronID())
-			w.DeleteCronID()
-			w.ResetContinueErrorTimes()
+			w.RemoveCronID()
+			w.RemoveContinueErrorTimes()
 
 			// add cron with default cron expression
 			cronID, err := s.Cron.AddFunc(w.GetCronExpression(), func() {
@@ -193,7 +197,6 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 				return err
 			}
 			w.SetCronID(cronID)
-			w.SetLastStatus(true)
 
 			return nil
 		}
@@ -201,12 +204,12 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 
 	// if the service is down
 	if !result.Status {
-		logger.Debugf("Service %s is down, Last status: %v, current status: %v", w.Name, w.GetLastStatus(), result.Status)
+		// logger.Debugf("Service %s is down, Last status: %v, current status: %v", w.Name, w.GetLastStatus(), result.Status)
 		w.AddContinueErrorTimes()
 		if w.GetContinueErrorTimes() >= 3 {
 			// remove cron by cronID
 			s.Cron.Remove(w.GetCronID())
-			w.DeleteCronID()
+			w.RemoveCronID()
 			// > 3 times, reset delay to Interval * error times
 			cronID, err := s.Cron.AddFunc(w.GetCronExpressionWithContinuesErrorTimes(), func() {
 				if w.Type == enums.Watcher_HTTP {
@@ -221,7 +224,9 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 				logger.Errorf("Error adding watcher %s to cron: %v", w.Name, err)
 				return err
 			}
+			w.SetCronID(cronID)
 
+			logger.Warnf("🔥 Service %s is down", w.Name)
 			timeString := time.Now().In(location).Format("2006/01/02 15:04:05")
 			message := fmt.Sprintf("[%s] Service %s is down, will retry in %v seconds", timeString, w.Name, w.Interval*w.GetContinueErrorTimes()*3)
 			embedMsg := &discordgo.MessageEmbed{
@@ -234,10 +239,10 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 				logger.Errorf("Error sending message to channel %s: %v", s.Cfg.SendingChannel, err)
 			}
 
-			w.SetCronID(cronID)
 			return nil
 		}
 
+		logger.Warnf("🔥 Service %s is down", w.Name)
 		timeString := time.Now().In(location).Format("2006/01/02 15:04:05")
 		response := fmt.Sprintf("[%s] Service %s is down", timeString, w.Name)
 		embedMsg := &discordgo.MessageEmbed{
@@ -245,7 +250,6 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 			Description: response,
 			Color:       0xff0000, // red
 		}
-		logger.Warnf("🔥 Service %s is down", w.Name)
 		_, err := s.Session.ChannelMessageSendEmbed(s.Cfg.SendingChannel, embedMsg)
 		if err != nil {
 			logger.Errorf("Error sending message to channel %s: %v", s.Cfg.SendingChannel, err)
@@ -254,7 +258,7 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 	}
 
 	// service is healthy
-	logger.Debugf("Service %s is healthy, Last status: %v, current status: %v", w.Name, w.GetLastStatus(), result.Status)
+	// logger.Debugf("Service %s is healthy, Last status: %v, current status: %v", w.Name, w.GetLastStatus(), result.Status)
 
 	return nil
 }
