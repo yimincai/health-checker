@@ -32,7 +32,7 @@ func (c *CommandHandler) RegisterCommand(cmd Command) {
 		c.cmdMap[invoke] = cmd
 	}
 
-	logger.Infof("Command Registered: %v, Description: %s", cmd.Invokes(), cmd.Description())
+	// logger.Infof("Command Registered: %v, Description: %s", cmd.Invokes(), cmd.Description())
 }
 
 func (c *CommandHandler) RegisterMiddleware(mw Middleware) {

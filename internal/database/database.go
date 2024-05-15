@@ -18,7 +18,7 @@ func New(env *config.Config) (*gorm.DB, error) {
 		gLog.Config{
 			Colorful:                  true,
 			IgnoreRecordNotFoundError: true,
-			LogLevel:                  gLog.Info,
+			LogLevel:                  gLog.Error,
 		},
 	)
 

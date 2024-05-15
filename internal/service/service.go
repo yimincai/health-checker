@@ -38,7 +38,7 @@ func (s *Service) InitWatchers() error {
 			logger.Errorf("Error adding watcher %s: %v", w.Name, err)
 			return err
 		}
-		logger.Infof("✅ Watcher %s added", w.Name)
+		logger.Infof("✅ Add watcher %s", w.Name)
 	}
 
 	return nil
@@ -152,11 +152,11 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 	}
 
 	// Defining location using FixedZone method
-	location := time.FixedZone("UTC+8", 8*60*60)
 	result := s.checkHttp(w)
 	defer func() {
 		w.SetLastStatus(result.Status)
 	}()
+	timeNowString := time.Now().Format("2006/01/02 15:04:05")
 
 	// logger.Debugf("Service %s is checking, Last status: %v, current status: %v", w.Name, w.GetLastStatus(), result.Status)
 
@@ -164,17 +164,16 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 	if w.GetLastStatus() != result.Status {
 		// logger.Debugf("Service %s is changing status, Last status: %v, current status: %v", w.Name, w.GetLastStatus(), result.Status)
 		if !w.GetLastStatus() && result.Status {
-			timeString := time.Now().In(location).Format("2006/01/02 15:04:05")
-			message := fmt.Sprintf("[%s] Service %s is up ", timeString, w.Name)
+			message := fmt.Sprintf("[%s] Service %s is up ", timeNowString, w.Name)
 			logger.Infof("✅ Service %s is fixed", w.Name)
 			embedMsg := &discordgo.MessageEmbed{
 				Title:       "✅ Service is fixed",
 				Description: message,
 				Color:       0x00ff00, // green
 			}
-			_, err := s.Session.ChannelMessageSendEmbed(s.Cfg.SendingChannel, embedMsg)
+			_, err := s.Session.ChannelMessageSendEmbed(s.Cfg.NotificationChannnel, embedMsg)
 			if err != nil {
-				logger.Errorf("Error sending message to channel %s: %v", s.Cfg.SendingChannel, err)
+				logger.Errorf("Error sending message to channel %s: %v", s.Cfg.NotificationChannnel, err)
 			}
 
 			// remove cron by cronID
@@ -227,32 +226,30 @@ func (s *Service) WatchHttp(watcher *models.Watcher) error {
 			w.SetCronID(cronID)
 
 			logger.Warnf("🔥 Service %s is down", w.Name)
-			timeString := time.Now().In(location).Format("2006/01/02 15:04:05")
-			message := fmt.Sprintf("[%s] Service %s is down, will retry in %v seconds", timeString, w.Name, w.Interval*w.GetContinueErrorTimes()*3)
+			message := fmt.Sprintf("[%s] Service %s is down, will retry in %v seconds", timeNowString, w.Name, w.Interval*w.GetContinueErrorTimes()*3)
 			embedMsg := &discordgo.MessageEmbed{
 				Title:       "🔥 Service is down",
 				Description: message,
 				Color:       0xff0000, // red
 			}
-			_, err = s.Session.ChannelMessageSendEmbed(s.Cfg.SendingChannel, embedMsg)
+			_, err = s.Session.ChannelMessageSendEmbed(s.Cfg.NotificationChannnel, embedMsg)
 			if err != nil {
-				logger.Errorf("Error sending message to channel %s: %v", s.Cfg.SendingChannel, err)
+				logger.Errorf("Error sending message to channel %s: %v", s.Cfg.NotificationChannnel, err)
 			}
 
 			return nil
 		}
 
 		logger.Warnf("🔥 Service %s is down", w.Name)
-		timeString := time.Now().In(location).Format("2006/01/02 15:04:05")
-		response := fmt.Sprintf("[%s] Service %s is down", timeString, w.Name)
+		response := fmt.Sprintf("[%s] Service %s is down", timeNowString, w.Name)
 		embedMsg := &discordgo.MessageEmbed{
 			Title:       "🔥 Service is down",
 			Description: response,
 			Color:       0xff0000, // red
 		}
-		_, err := s.Session.ChannelMessageSendEmbed(s.Cfg.SendingChannel, embedMsg)
+		_, err := s.Session.ChannelMessageSendEmbed(s.Cfg.NotificationChannnel, embedMsg)
 		if err != nil {
-			logger.Errorf("Error sending message to channel %s: %v", s.Cfg.SendingChannel, err)
+			logger.Errorf("Error sending message to channel %s: %v", s.Cfg.NotificationChannnel, err)
 		}
 		return nil
 	}

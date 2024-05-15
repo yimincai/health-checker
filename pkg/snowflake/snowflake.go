@@ -12,7 +12,7 @@ var node *snowflake.Node
 var workerID int64
 
 // init default snowflake with random workerID strategy,
-func init() {
+func New() {
 	var err error
 	workerID, err = randomNumber(0, 1023)
 	if err != nil {

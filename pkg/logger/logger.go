@@ -10,20 +10,22 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-type Logger struct {
+type CronLogger struct {
 	Logger *zap.Logger
 }
 
-var loggerOnce sync.Once
-var zapLogger *zap.Logger
+var (
+	loggerOnce sync.Once
+	zapLogger  *zap.Logger
+)
 
-func init() {
+func New() {
 	ljl := &lumberjack.Logger{
 		Filename:   "./bot_files/healthchecker.log",
 		MaxSize:    10, // megabytes
 		MaxAge:     30, // days
 		MaxBackups: 3,
-		LocalTime:  false,
+		LocalTime:  true,
 		Compress:   false,
 	}
 
@@ -39,16 +41,29 @@ func init() {
 	})
 }
 
-func GetInstance() *Logger {
-	return &Logger{zapLogger}
+func NewCronLogger() *CronLogger {
+	return &CronLogger{zapLogger}
 }
 
-func (l *Logger) Info(msg string, keysAndValues ...interface{}) {
-	l.Logger.Info(fmt.Sprintf(msg, keysAndValues...))
+func (l *CronLogger) Info(msg string, keysAndValues ...interface{}) {
+	fields := make([]zap.Field, 0, len(keysAndValues))
+	for i := 0; i < len(keysAndValues); i += 2 {
+		if i+1 < len(keysAndValues) {
+			fields = append(fields, zap.Any(keysAndValues[i].(string), keysAndValues[i+1]))
+		}
+	}
+	zapLogger.Info(msg, fields...)
 }
 
-func (l *Logger) Error(err error, msg string, keysAndValues ...interface{}) {
-	l.Logger.Error(fmt.Sprintf(fmt.Sprintf("%s error: %s", msg, err), keysAndValues...))
+func (l *CronLogger) Error(err error, msg string, keysAndValues ...interface{}) {
+	fields := make([]zap.Field, 0, len(keysAndValues)+1)
+	fields = append(fields, zap.Error(err))
+	for i := 0; i < len(keysAndValues); i += 2 {
+		if i+1 < len(keysAndValues) {
+			fields = append(fields, zap.Any(keysAndValues[i].(string), keysAndValues[i+1]))
+		}
+	}
+	zapLogger.Error(msg, fields...)
 }
 
 func Sugar() *zap.SugaredLogger {

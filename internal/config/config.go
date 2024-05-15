@@ -9,12 +9,12 @@ import (
 )
 
 type Config struct {
-	Prefix         string `mapstructure:"PREFIX"`
-	DiscordToken   string `mapstructure:"DISCORD_TOKEN"`
-	Endpoint       string `mapstructure:"ENDPOINT"`
-	PunchApiPath   string `mapstructure:"PUNCH_API_PATH"`
-	LoginApiPath   string `mapstructure:"LOGIN_API_PATH"`
-	SendingChannel string `mapstructure:"SENDING_CHANNEL"`
+	Prefix               string `mapstructure:"PREFIX"`
+	DiscordToken         string `mapstructure:"DISCORD_TOKEN"`
+	Endpoint             string `mapstructure:"ENDPOINT"`
+	PunchApiPath         string `mapstructure:"PUNCH_API_PATH"`
+	LoginApiPath         string `mapstructure:"LOGIN_API_PATH"`
+	NotificationChannnel string `mapstructure:"NOTIFICATION_CHANNEL"`
 }
 
 var cfg *Config
@@ -37,6 +37,7 @@ func New() *Config {
 			_ = viper.BindEnv("PUNCH_API_PATH")
 			_ = viper.BindEnv("LOGIN_API_PATH")
 			_ = viper.BindEnv("SENDING_CHANNEL")
+			_ = viper.BindEnv("NOTIFICATION_CHANNEL")
 		}
 
 		err = viper.Unmarshal(&cfg)

@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/yimincai/health-checker/internal/bot"
@@ -13,6 +14,7 @@ import (
 	"github.com/yimincai/health-checker/internal/events"
 	"github.com/yimincai/health-checker/internal/middlewares"
 	"github.com/yimincai/health-checker/pkg/logger"
+	"github.com/yimincai/health-checker/pkg/snowflake"
 )
 
 var (
@@ -20,9 +22,14 @@ var (
 	oSArch    = fmt.Sprintf("%v/%v", runtime.GOOS, runtime.GOARCH)
 )
 
+func init() {
+	loc := time.FixedZone("UTC+8", 8*60*60)
+	time.Local = loc
+	logger.New()
+	snowflake.New()
+}
+
 func main() {
-	logger.Infof("Go Version: %s", goVersion)
-	logger.Infof("OS/Arch: %s", oSArch)
 	server := bot.New()
 
 	// Register events
@@ -31,6 +38,9 @@ func main() {
 	// Register commands
 	registerCommands(server)
 
+	logger.Infof("Go Version: %s", goVersion)
+	logger.Infof("OS/Arch: %s", oSArch)
+	logger.Infof("Bot timezone is %s", time.Local.String())
 	server.Run()
 	defer func() {
 		server.Close()

@@ -41,8 +41,9 @@ func New() *Bot {
 		logger.Panicf("Error creating Discord session: " + err.Error())
 	}
 
-	l := logger.GetInstance()
-	c := cron.New(cron.WithLogger(l), cron.WithChain(cron.Recover(l)))
+	// Defining location using FixedZone method
+	cl := logger.NewCronLogger()
+	c := cron.New(cron.WithLogger(cl), cron.WithChain(cron.Recover(cl), cron.SkipIfStillRunning(cl)))
 	s := service.NewService(cfg, repo, session, c)
 
 	return &Bot{
@@ -69,7 +70,6 @@ func (b *Bot) Run() {
 	if err != nil {
 		logger.Fatalf("Error initializing watchers: %v", err)
 	}
-	logger.Info("All Watchers initialized.")
 	logger.Info("Bot is now running. Press CTRL-C to exit.")
 
 	b.Cron.Start()
